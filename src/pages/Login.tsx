@@ -58,7 +58,7 @@ export default function Login() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 p-4">
             <Card className="w-full max-w-md">
-                <CardHeader className="text-center">
+                <CardHeader className="text-center m-5">
                     <div className="mx-auto h-12 w-12 rounded-xl bg-primary-500 flex items-center justify-center mb-4">
                         <Layers className="h-7 w-7 text-white" />
                     </div>

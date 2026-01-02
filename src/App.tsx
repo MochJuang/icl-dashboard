@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import { DashboardLayout } from './components/layout';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
@@ -9,6 +10,14 @@ import { ProtectedRoute } from './routes/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Wallets from './pages/Wallets';
+import L2Dashboard from './pages/L2Dashboard';
+import L2Register from './pages/L2Register';
+import NodeDashboard from './pages/NodeDashboard';
+import NodeApply from './pages/NodeApply';
+import Voting from './pages/Voting';
+import OwnerMint from './pages/OwnerMint';
+import Treasury from './pages/Treasury';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -23,35 +32,37 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+      <ToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-            {/* Protected routes */}
-            <Route
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/wallets" element={<Dashboard />} />
-              <Route path="/l2" element={<Dashboard />} />
-              <Route path="/l2/register" element={<Dashboard />} />
-              <Route path="/nodes" element={<Dashboard />} />
-              <Route path="/nodes/apply" element={<Dashboard />} />
-              <Route path="/voting" element={<Dashboard />} />
-              <Route path="/owner/mint" element={<Dashboard />} />
-              <Route path="/owner/treasury" element={<Dashboard />} />
-              <Route path="/settings" element={<Dashboard />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+              {/* Protected routes */}
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/wallets" element={<Wallets />} />
+                <Route path="/l2" element={<L2Dashboard />} />
+                <Route path="/l2/register" element={<L2Register />} />
+                <Route path="/nodes" element={<NodeDashboard />} />
+                <Route path="/nodes/apply" element={<NodeApply />} />
+                <Route path="/voting" element={<Voting />} />
+                <Route path="/owner/mint" element={<OwnerMint />} />
+                <Route path="/owner/treasury" element={<Treasury />} />
+                <Route path="/settings" element={<Dashboard />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </ToastProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

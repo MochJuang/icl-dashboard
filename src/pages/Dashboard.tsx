@@ -52,24 +52,24 @@ export default function Dashboard() {
     return (
         <div className="space-y-6">
             {/* Welcome header */}
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+            <div className="border-b border-gray-200 pb-4">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                     Welcome back, {user?.full_name?.split(' ')[0] || 'User'}!
                 </h1>
-                <p className="text-gray-500">Here's an overview of your blockchain activity</p>
+                <p className="text-gray-500 mt-2">Here's an overview of your blockchain activity</p>
             </div>
 
             {/* Stats grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 {stats.map((stat) => (
-                    <Card key={stat.title}>
-                        <CardContent className="flex items-center gap-4 p-6">
-                            <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                    <Card key={stat.title} className="shadow-sm">
+                        <CardContent className="flex items-center gap-4 p-5">
+                            <div className={`p-3 rounded-xl ${stat.bgColor}`}>
                                 <stat.icon className={`h-6 w-6 ${stat.color}`} />
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">{stat.title}</p>
-                                <p className="text-2xl font-bold">{stat.value}</p>
+                                <p className="text-sm font-medium text-gray-500">{stat.title}</p>
+                                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                             </div>
                         </CardContent>
                     </Card>
