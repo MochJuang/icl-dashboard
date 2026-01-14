@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Coins, ArrowRight, AlertCircle, Check } from 'lucide-react';
+import { Coins, ArrowRight, AlertCircle, Check, Loader2, Sparkles, Plus } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
@@ -28,8 +28,8 @@ export default function OwnerMint() {
         queryFn: walletApi.getWallets,
     });
 
-    const ownerWallet: Wallet | undefined = (walletsData?.data?.wallets || []).find(
-        (w: Wallet) => w.wallet_type === 'OWNER'
+    const ownerWallet: Wallet | undefined = (walletsData?.data || []).find(
+        (w: Wallet) => w.type === 'OWNER' || w.wallet_type === 'OWNER'
     );
 
     const {
@@ -37,12 +37,22 @@ export default function OwnerMint() {
         handleSubmit,
         reset,
         formState: { errors },
+        watch,
     } = useForm<MintFormData>({
         resolver: zodResolver(mintSchema),
     });
 
+    const amount = watch('amount');
+
     const mutation = useMutation({
-        mutationFn: (data: MintFormData) => walletApi.mint(data),
+        mutationFn: (data: MintFormData) => {
+            if (!ownerWallet) throw new Error('Owner wallet not found');
+            return walletApi.mint({
+                wallet_address: ownerWallet.wallet_address,
+                pin: data.pin,
+                amount: data.amount,
+            });
+        },
         onSuccess: (response) => {
             if (response.success) {
                 setSuccess(true);
@@ -65,106 +75,176 @@ export default function OwnerMint() {
         mutation.mutate(data);
     };
 
+    if (!ownerWallet) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20">
+                <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
+                <h2 className="text-xl font-bold text-gray-900">Access Denied</h2>
+                <p className="text-gray-500">You do not have an Owner wallet required to access this page.</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-8 animate-fade-in">
             {/* Page Header */}
-            <div className="border-b border-gray-200 pb-4">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mint Coins</h1>
-                <p className="text-gray-500 mt-2">Create new ICL coins (Owner only)</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="space-y-1">
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Mint Coins</h1>
+                    <p className="text-gray-500 font-medium">Create new ICL coins and add to circulation</p>
+                </div>
+                <div className="px-4 py-2 bg-amber-50 rounded-lg border border-amber-100 text-amber-900 text-sm font-medium">
+                    Owner Access Only
+                </div>
             </div>
 
-            {/* Owner Wallet Balance */}
-            {ownerWallet && (
-                <Card className="bg-gradient-to-br from-amber-500 to-orange-600 text-white border-0 shadow-lg max-w-xl">
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                                <Coins className="h-6 w-6" />
+            <div className="grid gap-8 lg:grid-cols-3">
+                {/* Left Column: Form */}
+                <Card className="lg:col-span-2 border-none shadow-xl shadow-gray-200/50 bg-white/80 backdrop-blur-sm">
+                    <CardHeader className="border-b border-gray-100 pb-4">
+                        <CardTitle className="flex items-center gap-2">
+                            <div className="p-2 bg-amber-100 rounded-lg">
+                                <Plus className="h-5 w-5 text-amber-600" />
                             </div>
-                            <span className="text-amber-100 font-medium">Owner Wallet Balance</span>
-                        </div>
-                        <p className="text-3xl font-bold">{formatCurrency(ownerWallet.balance)} ICL</p>
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* Mint Form Card */}
-            <Card className="max-w-xl">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Coins className="h-5 w-5 text-amber-500" />
-                        Mint New Coins
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {success ? (
-                        <div className="text-center py-8">
-                            <div className="mx-auto h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                                <Check className="h-8 w-8 text-green-600" />
-                            </div>
-                            <h3 className="text-lg font-semibold mb-2">Minting Successful!</h3>
-                            <p className="text-gray-500">New coins have been added to your Owner wallet.</p>
-                        </div>
-                    ) : (
-                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                            {error && (
-                                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-                                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                                    {error}
+                            Mint Tokens
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        {success ? (
+                            <div className="text-center py-12 animate-in fade-in zoom-in duration-300">
+                                <div className="mx-auto h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mb-6 ring-8 ring-green-50">
+                                    <Check className="h-10 w-10 text-green-600" />
                                 </div>
-                            )}
-
-                            <div className="p-4 rounded-lg bg-amber-50 border border-amber-100">
-                                <p className="text-sm text-amber-700">
-                                    <strong>Warning:</strong> Minting creates new coins and adds them to the total supply.
-                                    This action is recorded on the blockchain and cannot be undone.
+                                <h3 className="text-2xl font-bold text-gray-900 mb-2">Minting Successful!</h3>
+                                <p className="text-gray-500 max-w-sm mx-auto">
+                                    Successfully minted <span className="font-bold text-gray-900">{formatCurrency(amount)} ICL</span>.
+                                    The coins have been added to your Owner wallet.
                                 </p>
                             </div>
+                        ) : (
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                                {error && (
+                                    <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 text-red-600 border border-red-100 animate-in slide-in-from-top-2">
+                                        <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                                        <p className="text-sm font-medium">{error}</p>
+                                    </div>
+                                )}
 
-                            <Input
-                                label="Amount to Mint"
-                                type="number"
-                                step="0.01"
-                                placeholder="0.00"
-                                error={errors.amount?.message}
-                                {...register('amount', { valueAsNumber: true })}
-                            />
+                                <div className="space-y-6">
+                                    <div className="relative">
+                                        <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+                                            Amount to Mint
+                                        </label>
+                                        <div className="relative">
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                placeholder="0.00"
+                                                className="pl-4 pr-12 text-lg font-medium h-14"
+                                                error={errors.amount?.message}
+                                                {...register('amount', { valueAsNumber: true })}
+                                            />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                                                ICL
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-2">
+                                            This will increase total supply. Action is irreversible.
+                                        </p>
+                                    </div>
 
-                            <div className="flex items-center justify-center gap-4 py-4">
-                                <div className="text-center">
-                                    <p className="text-sm text-gray-500">Minting Amount</p>
-                                    <p className="text-xl font-bold text-amber-600">
-                                        +{errors.amount ? '0.00' : '...'} ICL
-                                    </p>
+                                    <div className="p-6 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-between gap-4">
+                                        <div className="text-center flex-1">
+                                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Minting</p>
+                                            <p className="text-2xl font-bold text-amber-600">
+                                                +{amount ? formatCurrency(amount) : '0.00'}
+                                            </p>
+                                        </div>
+                                        <ArrowRight className="h-5 w-5 text-gray-300" />
+                                        <div className="text-center flex-1">
+                                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Destination</p>
+                                            <div className="flex flex-col items-center">
+                                                <p className="text-sm font-medium text-gray-900">Owner Wallet</p>
+                                                <p className="text-xs text-gray-400 font-mono">
+                                                    {ownerWallet.wallet_address?.slice(0, 6)}...{ownerWallet.wallet_address?.slice(-4)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-gray-100">
+                                        <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+                                            Security PIN
+                                        </label>
+                                        <Input
+                                            type="password"
+                                            maxLength={6}
+                                            placeholder="Enter 6-digit PIN"
+                                            className="font-mono tracking-widest text-center text-lg h-12"
+                                            error={errors.pin?.message}
+                                            {...register('pin')}
+                                        />
+                                    </div>
                                 </div>
-                                <ArrowRight className="h-5 w-5 text-gray-400" />
-                                <div className="text-center">
-                                    <p className="text-sm text-gray-500">Owner Wallet</p>
-                                    <p className="text-lg font-medium text-gray-900">
-                                        {ownerWallet?.wallet_address?.slice(0, 10)}...
-                                    </p>
+
+                                <Button
+                                    type="submit"
+                                    className="w-full h-12 text-base font-semibold bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-500/20"
+                                    isLoading={mutation.isPending}
+                                >
+                                    {mutation.isPending ? (
+                                        <>
+                                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                            Minting Coins...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="h-5 w-5 mr-2" />
+                                            Confirm Minting
+                                        </>
+                                    )}
+                                </Button>
+                            </form>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Right Column: Wallet Info */}
+                <div className="space-y-6">
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 text-white shadow-xl shadow-amber-500/20">
+                        <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white/10 blur-2xl" />
+                        <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-32 h-32 rounded-full bg-black/5 blur-2xl" />
+
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm shadow-inner">
+                                    <Coins className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <p className="text-amber-100 font-medium text-sm">Owner Balance</p>
+                                    <p className="text-xs text-amber-200/80 font-mono">{ownerWallet.wallet_address}</p>
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-gray-200">
-                                <Input
-                                    label="Enter PIN to Confirm"
-                                    type="password"
-                                    maxLength={6}
-                                    placeholder="Enter 6-digit PIN"
-                                    error={errors.pin?.message}
-                                    {...register('pin')}
-                                />
+                            <div>
+                                <p className="text-4xl font-bold tracking-tight mb-1">
+                                    {formatCurrency(ownerWallet.balance)}
+                                </p>
+                                <p className="text-amber-100 text-sm font-medium">Available ICL</p>
                             </div>
 
-                            <Button type="submit" className="w-full" isLoading={mutation.isPending}>
-                                <Coins className="h-4 w-4 mr-2" />
-                                Mint Coins
-                            </Button>
-                        </form>
-                    )}
-                </CardContent>
-            </Card>
+                            <div className="mt-8 pt-6 border-t border-white/10">
+                                <div className="flex items-start gap-2 text-xs text-amber-100/90 leading-relaxed">
+                                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                    <p>
+                                        Minted coins are immediately available in this wallet but are recorded publicly on the ledger.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

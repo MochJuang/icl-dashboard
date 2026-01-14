@@ -3,17 +3,18 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Send, X, AlertCircle } from 'lucide-react';
+import { Send, X, AlertCircle, CheckCircle, Info } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { walletApi } from '../../lib/api';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, shortenAddress } from '../../lib/utils';
 import { useToast } from '../../context/ToastContext';
+import { WALLET_TYPE_LABELS } from '../../lib/constants';
 import type { Wallet } from '../../types';
 
 const transferSchema = z.object({
-    to_wallet_id: z.string().min(1, 'Recipient wallet address is required'),
+    to_wallet_address: z.string().min(1, 'Recipient wallet address is required'),
     amount: z.number().positive('Amount must be greater than 0'),
     pin: z.string().length(6, 'PIN must be 6 digits').regex(/^\d+$/, 'PIN must contain only numbers'),
 });
@@ -29,41 +30,57 @@ interface TransferModalProps {
 export function TransferModal({ wallet, isOpen, onClose }: TransferModalProps) {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [txResult, setTxResult] = useState<{ tx_id: string; fee_charged: number } | null>(null);
     const queryClient = useQueryClient();
-    const toast = useToast();
+    const { showToast } = useToast();
 
     const {
         register,
         handleSubmit,
         reset,
+        watch,
         formState: { errors },
     } = useForm<TransferFormData>({
         resolver: zodResolver(transferSchema),
+        defaultValues: {
+            to_wallet_address: '',
+            amount: undefined,
+            pin: '',
+        },
     });
+
+    const amount = watch('amount');
+    const estimatedFee = 0.4; // Transfer fee as per API
+    const totalAmount = (amount || 0) + estimatedFee;
 
     const mutation = useMutation({
         mutationFn: (data: TransferFormData) =>
             walletApi.transfer({
-                from_wallet_id: wallet?.wallet_id || '',
-                to_wallet_id: data.to_wallet_id,
-                amount: data.amount,
+                wallet_address: wallet?.wallet_address || '',
                 pin: data.pin,
+                transfer: {
+                    to_wallet_address: data.to_wallet_address,
+                    amount: data.amount,
+                },
             }),
         onSuccess: (response) => {
             if (response.success) {
                 setSuccess(true);
+                setTxResult({
+                    tx_id: response.data?.tx_id || '',
+                    fee_charged: response.data?.fee_charged || 0,
+                });
                 queryClient.invalidateQueries({ queryKey: ['wallets'] });
-                toast.success('Transfer Successful', 'Coins have been sent to the recipient');
-                setTimeout(() => {
-                    handleClose();
-                }, 2000);
+                showToast('Transfer completed successfully', 'success');
             } else {
                 setError(response.error || 'Transfer failed');
-                toast.error('Transfer Failed', response.error || 'Please try again');
+                showToast(response.error || 'Transfer failed', 'error');
             }
         },
-        onError: (err: Error) => {
-            setError(err.message || 'Transfer failed. Please try again.');
+        onError: (err: Error & { response?: { data?: { error?: string } } }) => {
+            const message = err.response?.data?.error || err.message || 'Transfer failed. Please try again.';
+            setError(message);
+            showToast(message, 'error');
         },
     });
 
@@ -71,23 +88,34 @@ export function TransferModal({ wallet, isOpen, onClose }: TransferModalProps) {
         reset();
         setError('');
         setSuccess(false);
+        setTxResult(null);
         onClose();
     };
 
     const onSubmit = (data: TransferFormData) => {
+        if (!wallet) return;
+
+        // Check if user has enough balance
+        if (data.amount + estimatedFee > wallet.balance) {
+            setError(`Insufficient balance. You need ${formatCurrency(data.amount + estimatedFee)} ICL (including ${estimatedFee} fee)`);
+            return;
+        }
+
         setError('');
         mutation.mutate(data);
     };
 
     if (!wallet) return null;
 
+    const walletType = wallet.type || wallet.wallet_type || 'REGULAR';
+
     return (
         <Dialog.Root open={isOpen} onOpenChange={(open) => !open && handleClose()}>
             <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl p-6 w-full max-w-md z-50">
+                <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
+                <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-[calc(100%-2rem)] max-w-md z-50 max-h-[90vh] overflow-y-auto">
                     <div className="flex items-center justify-between mb-6">
-                        <Dialog.Title className="text-lg font-semibold">
+                        <Dialog.Title className="text-xl font-semibold">
                             Transfer Coins
                         </Dialog.Title>
                         <Dialog.Close asChild>
@@ -100,54 +128,109 @@ export function TransferModal({ wallet, isOpen, onClose }: TransferModalProps) {
                     {success ? (
                         <div className="text-center py-8">
                             <div className="mx-auto h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                                <Send className="h-8 w-8 text-green-600" />
+                                <CheckCircle className="h-8 w-8 text-green-600" />
                             </div>
                             <h3 className="text-lg font-semibold mb-2">Transfer Successful!</h3>
-                            <p className="text-gray-500">Your coins have been sent.</p>
-                        </div>
-                    ) : (
-                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                            {error && (
-                                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-                                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                                    {error}
+                            <p className="text-gray-500 mb-4">Your coins have been sent.</p>
+
+                            {txResult && (
+                                <div className="text-left bg-gray-50 rounded-xl p-4 space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Transaction ID</span>
+                                        <span className="font-mono text-gray-900 truncate ml-2 max-w-[180px]">
+                                            {shortenAddress(txResult.tx_id, 8)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Fee Charged</span>
+                                        <span className="font-medium text-gray-900">
+                                            {formatCurrency(txResult.fee_charged)} ICL
+                                        </span>
+                                    </div>
                                 </div>
                             )}
 
-                            <div className="p-4 rounded-lg bg-gray-50">
-                                <p className="text-sm text-gray-500">From Wallet</p>
-                                <p className="font-medium">{wallet.wallet_type} Wallet</p>
-                                <p className="text-sm text-gray-500">
-                                    Balance: {formatCurrency(wallet.balance)} ICL
+                            <Button className="mt-6" onClick={handleClose}>
+                                Done
+                            </Button>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                            {error && (
+                                <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 text-red-700 text-sm">
+                                    <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                                    <span>{error}</span>
+                                </div>
+                            )}
+
+                            {/* From Wallet */}
+                            <div className="p-4 rounded-xl bg-gray-50">
+                                <p className="text-xs text-gray-500 uppercase tracking-wide">From Wallet</p>
+                                <p className="font-medium text-gray-900 mt-1">
+                                    {WALLET_TYPE_LABELS[walletType]} • {shortenAddress(wallet.wallet_address, 6)}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-0.5">
+                                    Available: {formatCurrency(wallet.balance)} ICL
                                 </p>
                             </div>
 
-                            <Input
-                                label="Recipient Wallet Address"
-                                placeholder="Enter wallet address"
-                                error={errors.to_wallet_id?.message}
-                                {...register('to_wallet_id')}
-                            />
+                            {/* Recipient Address */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Recipient Wallet Address
+                                </label>
+                                <Input
+                                    placeholder="0x..."
+                                    error={errors.to_wallet_address?.message}
+                                    {...register('to_wallet_address')}
+                                />
+                            </div>
 
-                            <Input
-                                label="Amount"
-                                type="number"
-                                step="0.01"
-                                placeholder="0.00"
-                                error={errors.amount?.message}
-                                {...register('amount', { valueAsNumber: true })}
-                            />
+                            {/* Amount */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Amount
+                                </label>
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    placeholder="0.00"
+                                    error={errors.amount?.message}
+                                    {...register('amount', { valueAsNumber: true })}
+                                />
+                            </div>
 
-                            <Input
-                                label="PIN"
-                                type="password"
-                                maxLength={6}
-                                placeholder="Enter 6-digit PIN"
-                                error={errors.pin?.message}
-                                {...register('pin')}
-                            />
+                            {/* Fee Info */}
+                            <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 text-blue-700 text-sm">
+                                <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p>Transfer fee: {formatCurrency(estimatedFee)} ICL</p>
+                                    {amount > 0 && (
+                                        <p className="font-medium mt-1">
+                                            Total: {formatCurrency(totalAmount)} ICL
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
 
-                            <div className="flex gap-3 pt-4">
+                            {/* PIN */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Enter PIN to Confirm
+                                </label>
+                                <Input
+                                    type="password"
+                                    maxLength={6}
+                                    placeholder="Enter 6-digit PIN"
+                                    className="text-center text-lg tracking-widest"
+                                    error={errors.pin?.message}
+                                    {...register('pin')}
+                                />
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-3 pt-2">
                                 <Button type="button" variant="outline" className="flex-1" onClick={handleClose}>
                                     Cancel
                                 </Button>

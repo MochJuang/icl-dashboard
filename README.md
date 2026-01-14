@@ -1,73 +1,124 @@
-# React + TypeScript + Vite
+# ICL Dashboard - Hyperledger Fabric Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, premium-styled frontend dashboard for interacting with the ICL Hyperledger Fabric network. This application serves as the primary interface for users, node operators, and network owners to manage wallets, nodes, and governance.
 
-Currently, two official plugins are available:
+## 🚀 Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 🔐 Authentication & Security
+- **Multi-Wallet Support**: Manage multiple wallets (Regular, Node, Owner, Developer) under a single user account.
+- **Role-Based Access Control**: Feature visibility and access restricted by wallet type and user role.
+- **Secure Sessions**: JWT-based authentication with auto-logout and session management.
 
-## React Compiler
+### 💼 Wallet Management
+- **Unified Dashboard**: View total balance, locked assets, and active wallet stats at a glance.
+- **Transfer**: Send ICL coins to other users with fee estimation and address validation.
+- **Create Wallet**: Generate new wallets securely with PIN protection.
+- **Detailed History**: Track transaction history and asset movements (planned).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🖥️ Node Operations
+- **Node Dashboard**: Dedicated interface for node operators to monitor status and performance.
+- **Node Registration**: streamlined application flow for becoming a Validator or Full Node.
+- **Lifecycle Management**: Activate, deactivate, and manage node stakes directly from the UI.
+- **Status Monitoring**: Real-time visibility into active network nodes and application status.
 
-## Expanding the ESLint configuration
+### 🗳️ Governance
+- **Voting System**: Browse active proposals and cast votes using Node Wallets.
+- **Proposal Tracking**: View vote status, deadlines, and results.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 👑 Owner Functions
+- **Treasury Management**: Exclusive dashboard for network owners to monitor total supply and circulation.
+- **Minting**: Secure interface for minting new coins into circulation.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🛠️ Tech Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- **Framework**: [React 18](https://reactjs.org/) with [Vite](https://vitejs.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS v3](https://tailwindcss.com/) with a custom premium design system
+- **State Management**: [TanStack Query (React Query)](https://tanstack.com/query/latest) for server state & caching
+- **Routing**: [React Router v6](https://reactrouter.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Utilities**: `clsx` and `tailwind-merge` for dynamic class composition
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🎨 UI/UX Standards
+
+This project follows a strict "Premium Glassmorphism" design system:
+
+### Layout & Spacing
+- **8px Grid System**: All spacing (margins, padding, gaps) follows the `8px` scale (8, 16, 24, 32, 48...).
+- **Max-Width**: Main content is contained within `max-w-7xl` (1280px) to ensure readability on large screens.
+- **Grid Discipline**:
+  - **Desktop (XL)**: 4-column stats, 3-column main content (2/1 split).
+  - **Laptop (LG)**: Adaptive grids that respect sidebar width.
+  - **Mobile**: Single-column vertical stacks for maximum usability.
+- **Equal Heights**: Cards in the same row always share equal height (`h-full`) for visual balance.
+
+### Visual Style
+- **Glassmorphism**: Extensive use of `backdrop-blur`, semi-transparent backgrounds (`bg-white/80`), and subtle borders.
+- **Gradients**: Brand-aligned gradients (Blue, Purple, Amber) used for emphasis and active states.
+- **Feedback**: Smooth transitions (`duration-300`), hover lifts (`-translate-y-1`), and active scale effects.
+
+## 🏃‍♂️ Getting Started
+
+### Prerequisites
+- Node.js > 18.x
+- npm > 9.x
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd icl-dashboard
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Configure Environment:
+   Create a `.env` file in the root directory:
+   ```env
+   VITE_API_URL=http://localhost:8080/api/v1
+   ```
+
+4. Run Development Server:
+   ```bash
+   npm run dev
+   ```
+
+### Building for Production
+
+```bash
+npm run build
+```
+This will generate optimized static files in the `dist` directory.
+
+## 📂 Project Structure
+
+```
+src/
+├── components/         # Reusable UI components
+│   ├── layout/         # Sidebar, Header, DashboardLayout
+│   ├── ui/             # Primitives (Button, Card, Input, Badge)
+│   └── wallet/         # Domain-specific (WalletCard, TransferModal)
+├── context/            # React Context (Auth, Toast)
+├── lib/                # Utilities and API client
+│   ├── api.ts          # Centralized Axios API definitions
+│   └── utils.ts        # Helper functions
+├── pages/              # Route components (Dashboard, Wallets, etc.)
+└── types/              # TypeScript interfaces (Postman-aligned)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🧪 Linting & formatting
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# Run linting
+npm run lint
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Check definitions
+tsc -b
 ```
+
+---
+Built with ❤️ for the ICL Hyperledger Fabric Network.

@@ -9,14 +9,15 @@
 }
 
 * {
-  margin: 0;
-  padding: 0;
+  /*margin: 0;*/
+  /*padding: 0;*/
   box-sizing: border-box;
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
+  @apply bg-gray-50 text-gray-900;
 }
 
 /* Custom scrollbar */
@@ -26,19 +27,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
-}
-
-/* Custom theme colors using CSS variables */
+/* Theme Configuration */
 @theme {
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
@@ -59,41 +55,62 @@ body {
 
   --color-danger-500: #ef4444;
   --color-danger-600: #dc2626;
+
+  --animate-slide-in: slide-in 0.3s ease-out;
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-scale-in: scale-in 0.2s ease-out;
+
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
 }
 
-/* Animations */
-@keyframes slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
+/* Utilities */
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-lg;
   }
 
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
+  .glass-dark {
+    @apply bg-gray-900/70 backdrop-blur-md border border-white/10 shadow-xl;
   }
 
-  to {
-    opacity: 1;
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400;
   }
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
+/* Animation utilities */
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
@@ -102,11 +119,6 @@ body {
   animation: fade-in 0.2s ease-out;
 }
 
-/* Mobile improvements */
-@media (max-width: 640px) {
-  .fixed.bottom-4.right-4 {
-    left: 1rem;
-    right: 1rem;
-    max-width: none;
-  }
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
 }

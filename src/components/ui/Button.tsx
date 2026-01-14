@@ -4,17 +4,18 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const buttonVariants = cva(
-    'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+    'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]',
     {
         variants: {
             variant: {
-                default: 'bg-primary-500 text-white hover:bg-primary-600 focus-visible:ring-primary-500',
-                destructive: 'bg-danger-500 text-white hover:bg-danger-600 focus-visible:ring-danger-500',
+                default: 'bg-primary-500 text-white hover:bg-primary-600 focus-visible:ring-primary-500 shadow-sm',
+                primary: 'bg-primary-500 text-white hover:bg-primary-600 focus-visible:ring-primary-500 shadow-sm',
+                destructive: 'bg-danger-500 text-white hover:bg-danger-600 focus-visible:ring-danger-500 shadow-sm',
                 outline: 'border border-gray-300 bg-white hover:bg-gray-50 focus-visible:ring-gray-500',
                 secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-500',
                 ghost: 'hover:bg-gray-100 focus-visible:ring-gray-500',
                 link: 'text-primary-500 underline-offset-4 hover:underline',
-                success: 'bg-success-500 text-white hover:bg-success-600 focus-visible:ring-success-500',
+                success: 'bg-green-500 text-white hover:bg-green-600 focus-visible:ring-green-500 shadow-sm',
             },
             size: {
                 default: 'h-10 px-4 py-2',
