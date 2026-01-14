@@ -216,7 +216,7 @@ export const nodeApi = {
      *   }
      * }
      */
-    apply: async (data: { wallet_id: string; pin: string; request: { node_type: string; stake_amount: number; endpoint: string } }) => {
+    apply: async (data: { wallet_address: string; pin: string; request: { node_type: string; stake_amount: number; endpoint: string } }) => {
         const response = await api.post('/nodes/apply', data);
         return response.data;
     },

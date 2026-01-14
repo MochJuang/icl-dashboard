@@ -145,7 +145,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             {/* Sidebar */}
             <aside
                 className={cn(
-                    'fixed inset-y-0 left-0 z-50 w-72 bg-white/95 backdrop-blur-xl border-r border-gray-100 transform transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1)',
+                    'inset-y-0 left-0 z-50 w-72 bg-white/95 backdrop-blur-xl border-r border-gray-100 transform transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1)',
                     'lg:translate-x-0',
                     'flex flex-col shadow-2xl lg:shadow-none',
                     isOpen ? 'translate-x-0' : '-translate-x-full'

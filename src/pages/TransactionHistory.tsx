@@ -14,9 +14,9 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { walletApi } from '../lib/api';
+import { userApi, walletApi } from '../lib/api';
 import { formatCurrency, formatDate, cn } from '../lib/utils';
-import type { TransferRecord, WalletInfo } from '../types';
+import type { TransferRecord, UserProfile, WalletInfo } from '../types';
 import { useAuth } from '../context/AuthContext';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
@@ -50,6 +50,11 @@ export default function TransactionHistory() {
         queryFn: () => selectedWalletId
             ? walletApi.getWalletHistory(selectedWalletId)
             : walletApi.getTransferHistory(),
+    });
+
+    const { data: profile } = useQuery({
+        queryKey: ['users'],
+        queryFn: () => userApi.getProfile(),
     });
 
     const transfers: TransferRecord[] = transfersData?.data?.transfers || transfersData?.transfers || [];
@@ -92,8 +97,8 @@ export default function TransactionHistory() {
                         isIncoming && !isOutgoing
                             ? "bg-green-100 text-green-600"
                             : isOutgoing && !isIncoming
-                            ? "bg-red-100 text-red-600"
-                            : "bg-gray-100 text-gray-600"
+                                ? "bg-red-100 text-red-600"
+                                : "bg-gray-100 text-gray-600"
                     )}>
                         {isIncoming && !isOutgoing ? (
                             <ArrowDownLeft className="h-5 w-5" />
@@ -108,15 +113,16 @@ export default function TransactionHistory() {
                     <div>
                         <div className="flex items-center gap-2">
                             <p className="font-semibold text-gray-900">
-                                {transfer.description || typeLabels[transfer.type] || transfer.type}
+                                {transfer.type}
                             </p>
                             <Badge variant={typeVariants[transfer.type] || 'default'} className="text-xs">
-                                {transfer.type}
+                                {profile?.user_id == transfer.from_wallet_id ? 'DEBET' : 'KREDIT'}
                             </Badge>
+
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
                             <span className="font-mono text-xs">
-                                {transfer.tx_id?.slice(0, 16)}...
+                                {(transfer.tx_id)}
                             </span>
                             <span>•</span>
                             <span>{formatDate(transfer.timestamp)}</span>
@@ -138,7 +144,7 @@ export default function TransactionHistory() {
                         </p>
                     )}
                 </div>
-            </div>
+            </div >
         );
     };
 

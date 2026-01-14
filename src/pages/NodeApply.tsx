@@ -59,7 +59,7 @@ export default function NodeApply() {
             if (!wallet) throw new Error('Selected wallet not found');
 
             return nodeApi.apply({
-                wallet_id: wallet.wallet_id,
+                wallet_address: wallet.wallet_address,
                 pin: data.pin,
                 request: {
                     node_type: data.node_type,

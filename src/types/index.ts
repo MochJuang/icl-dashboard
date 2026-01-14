@@ -318,6 +318,14 @@ export interface TransferRecord {
     ref_tx_id?: string;
 }
 
+export interface UserProfileResponse {
+    user_id: string;
+    email: string;
+    full_name: string;
+    kyc_status: 'PENDING' | 'VERIFIED' | 'REJECTED';
+    wallets: WalletInfo[];
+}
+
 // Transfer History Response
 export interface TransferHistoryResponse {
     transfers: TransferRecord[];

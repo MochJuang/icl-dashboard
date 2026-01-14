@@ -19,10 +19,10 @@ const ADMIN_FEE = {
 };
 
 const l2RegisterSchema = z.object({
-    l2_id: z.string().min(3, 'L2 ID must be at least 3 characters').regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and hyphens'),
-    chaincode_name: z.string().min(3, 'Name must be at least 3 characters'),
+    name: z.string().min(3, 'Name must be at least 3 characters'),
     description: z.string().optional(),
-    gas_fee: z.number().min(ADMIN_FEE.TOTAL, `Minimum gas fee is ${ADMIN_FEE.TOTAL} ICL`),
+    document_link: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+    fee: z.number().min(ADMIN_FEE.TOTAL, `Minimum fee is ${ADMIN_FEE.TOTAL} ICL`),
     pin: z.string().length(6, 'PIN must be 6 digits').regex(/^\d+$/, 'PIN must contain only numbers'),
 });
 
@@ -40,39 +40,35 @@ export default function L2Register() {
     } = useForm<L2RegisterFormData>({
         resolver: zodResolver(l2RegisterSchema),
         defaultValues: {
-            gas_fee: 1,
+            fee: 1.5,
+            description: '',
+            document_link: '',
         },
     });
 
-    const gasFee = watch('gas_fee') || ADMIN_FEE.TOTAL;
+    const fee = watch('fee') || ADMIN_FEE.TOTAL;
 
     // Calculate profit sharing breakdown
     const profitBreakdown = useMemo(() => {
-        const developerShare = Math.max(0, gasFee - ADMIN_FEE.TOTAL);
+        const developerShare = Math.max(0, fee - ADMIN_FEE.TOTAL);
         return {
             validator: ADMIN_FEE.VALIDATOR,
             fullNode: ADMIN_FEE.FULL_NODE,
             protocol: ADMIN_FEE.PROTOCOL,
             developer: developerShare,
-            total: gasFee,
+            total: fee,
         };
-    }, [gasFee]);
+    }, [fee]);
 
     const mutation = useMutation({
         mutationFn: (data: L2RegisterFormData) => {
-            // Transform to API format with calculated profit sharing
+            // Transform to new API format
             const apiData = {
-                l2_id: data.l2_id,
-                chaincode_name: data.chaincode_name,
-                description: data.description,
-                base_fee: data.gas_fee,
-                profit_sharing: {
-                    validator_share: ADMIN_FEE.VALIDATOR,
-                    fullnode_share: ADMIN_FEE.FULL_NODE,
-                    protocol_share: ADMIN_FEE.PROTOCOL,
-                    developer_share: profitBreakdown.developer,
-                },
                 pin: data.pin,
+                name: data.name,
+                description: data.description || '',
+                document_link: data.document_link ? [data.document_link] : [],
+                fee: data.fee,
             };
             return l2Api.register(apiData);
         },
@@ -125,22 +121,22 @@ export default function L2Register() {
                             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Basic Information</h3>
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <Input
-                                    label="L2 ID"
+                                    label="Application Name"
                                     placeholder="my-application"
-                                    error={errors.l2_id?.message}
-                                    {...register('l2_id')}
+                                    error={errors.name?.message}
+                                    {...register('name')}
                                 />
                                 <Input
-                                    label="Application Name"
-                                    placeholder="My Application"
-                                    error={errors.chaincode_name?.message}
-                                    {...register('chaincode_name')}
+                                    label="Document Link"
+                                    placeholder="https://docs.example.com/whitepaper.pdf"
+                                    error={errors.document_link?.message}
+                                    {...register('document_link')}
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Description (Optional)
+                                    Description
                                 </label>
                                 <textarea
                                     className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
@@ -151,9 +147,9 @@ export default function L2Register() {
                             </div>
                         </div>
 
-                        {/* Gas Fee & Profit Sharing Section */}
+                        {/* Fee & Profit Sharing Section */}
                         <div className="space-y-4 pt-6 border-t border-gray-200">
-                            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Gas Fee & Profit Sharing</h3>
+                            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Fee & Profit Sharing</h3>
 
                             {/* Fixed Admin Fee Notice */}
                             <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
@@ -183,16 +179,16 @@ export default function L2Register() {
                                 </div>
                             </div>
 
-                            {/* Gas Fee Input */}
+                            {/* Fee Input */}
                             <div className="sm:w-1/2">
                                 <Input
-                                    label="Gas Fee per Transaction (ICL)"
+                                    label="Fee per Transaction (ICL)"
                                     type="number"
                                     step="0.1"
                                     min={ADMIN_FEE.TOTAL}
                                     placeholder={`Minimum ${ADMIN_FEE.TOTAL}`}
-                                    error={errors.gas_fee?.message}
-                                    {...register('gas_fee', { valueAsNumber: true })}
+                                    error={errors.fee?.message}
+                                    {...register('fee', { valueAsNumber: true })}
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
                                     Minimum: {ADMIN_FEE.TOTAL} ICL. Any amount above this goes to you (Developer).

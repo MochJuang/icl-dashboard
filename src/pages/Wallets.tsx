@@ -74,13 +74,6 @@ export default function Wallets() {
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">My Wallets</h1>
                     <p className="text-gray-500 font-medium">Manage your blockchain wallets and assets</p>
                 </div>
-                <Button
-                    onClick={() => setIsCreateOpen(true)}
-                    className="bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-500/20"
-                >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create New Wallet
-                </Button>
             </div>
 
             {/* Stats */}
