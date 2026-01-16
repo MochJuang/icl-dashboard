@@ -50,7 +50,7 @@ export function TransferModal({ wallet, isOpen, onClose }: TransferModalProps) {
     });
 
     const amount = watch('amount');
-    const estimatedFee = 0.4; // Transfer fee as per API
+    const estimatedFee = 0.0; // Transfer fee as per API
     const totalAmount = (amount || 0) + estimatedFee;
 
     const mutation = useMutation({
