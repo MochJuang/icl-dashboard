@@ -113,7 +113,7 @@ export default function DeveloperApplications() {
         );
     };
 
-    const L2Card = ({ l2, onViewDetails }: { l2: any; onViewDetails?: () => void }) => (
+    const L2Card = ({ l2 }: { l2: any }) => (
         <Card className="hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
                 <div className="flex items-start justify-between gap-4 mb-4">

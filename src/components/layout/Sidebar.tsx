@@ -68,9 +68,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     // Node navigation - different items based on wallet types
     const nodeNav: NavItem[] = useMemo(() => {
         const items: NavItem[] = [];
+        const hasNodeWallet = hasWalletType('NODE_WALLET');
+        
+        // Debug log
+        console.log('Sidebar: hasNodeWallet =', hasNodeWallet);
 
         // If has NODE_WALLET, can manage nodes and vote
-        if (hasWalletType('NODE_WALLET')) {
+        if (hasNodeWallet) {
             items.push({ name: 'My Nodes', href: '/nodes', icon: Server });
             items.push({ name: 'Voting', href: '/voting', icon: Vote });
         }

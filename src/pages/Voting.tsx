@@ -51,7 +51,7 @@ const statusVariants: Record<string, 'default' | 'success' | 'warning' | 'danger
 
 export default function Voting() {
     const queryClient = useQueryClient();
-    const { getNodeWallets, hasWalletType } = useAuth();
+    const { getNodeWallets, hasWalletType, refreshWallets } = useAuth();
 
     const [selectedVote, setSelectedVote] = useState<VoteDetail | null>(null);
     const [selectedNodeWallet, setSelectedNodeWallet] = useState<WalletInfo | null>(null);
@@ -115,13 +115,22 @@ export default function Voting() {
                     decision: data.decision,
                 },
             }),
-        onSuccess: (response) => {
+        onSuccess: async (response) => {
             if (response.success) {
                 setSelectedVote(null);
                 setSelectedNodeWallet(null);
                 setSelectedNode(null);
                 setPin('');
                 setError('');
+
+                // Refresh wallets to get updated balances
+                try {
+                    await refreshWallets();
+                } catch (error) {
+                    console.error('Failed to refresh wallets after vote:', error);
+                }
+
+                // Refresh vote data
                 queryClient.invalidateQueries({ queryKey: ['active-votes'] });
                 votesList.forEach((v) => {
                     queryClient.invalidateQueries({ queryKey: ['vote-detail', v.vote_id] });
@@ -150,16 +159,29 @@ export default function Voting() {
         });
     };
 
-    const openVoteModal = (vote: VoteDetail) => {
+    const openVoteModal = async (vote: VoteDetail) => {
         setSelectedVote(vote);
         setError('');
         setPin('');
+        await refreshWallets();
+        setSelectedNodeWallet(null);
+        setSelectedNode(null);
+        setShowWalletSelector(false);
+    };
 
-        if (nodeWallets.length > 0) {
-            setSelectedNodeWallet(nodeWallets[0]);
-            const associatedNode = myNodes.find((n) => n.node_wallet_id === nodeWallets[0].wallet_id);
-            setSelectedNode(associatedNode || myNodes[0] || null);
+    const handleSelectNode = (node: Node) => {
+        setSelectedNode(node);
+        const wallet = nodeWallets.find((w) => w.wallet_id === node.node_wallet_id);
+        console.log('Selecting node:', node);
+        console.log('Found wallet:', nodeWallets);
+        if (wallet) {
+            setSelectedNodeWallet(wallet);
+        } else {
+            console.log('No wallet found for node wallet ID:', node.node_wallet_id);
         }
+
+
+        setShowWalletSelector(false);
     };
 
     const canVote = hasWalletType('NODE_WALLET') && myNodes.length > 0;
@@ -412,14 +434,7 @@ export default function Voting() {
                                                     <button
                                                         key={node.node_id}
                                                         type="button"
-                                                        onClick={() => {
-                                                            setSelectedNode(node);
-                                                            const wallet = nodeWallets.find(
-                                                                (w) => w.wallet_id === node.node_wallet_id
-                                                            );
-                                                            if (wallet) setSelectedNodeWallet(wallet);
-                                                            setShowWalletSelector(false);
-                                                        }}
+                                                        onClick={() => handleSelectNode(node)}
                                                         className={cn(
                                                             'w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors first:rounded-t-xl last:rounded-b-xl',
                                                             selectedNode?.node_id === node.node_id && 'bg-primary-50'

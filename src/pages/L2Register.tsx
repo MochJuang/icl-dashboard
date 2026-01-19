@@ -67,7 +67,7 @@ export default function L2Register() {
                 pin: data.pin,
                 name: data.name,
                 description: data.description || '',
-                document_link: data.document_link ? [data.document_link] : [],
+                document_link: data.document_link,
                 fee: data.fee,
             };
             return l2Api.register(apiData);

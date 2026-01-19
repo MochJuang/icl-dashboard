@@ -5,7 +5,6 @@ import type {
     TransferRequest,
     MintRequest,
     OwnerTransferRequest,
-    L2RegisterRequest,
     DeveloperApplyRequest,
 } from '../types';
 
@@ -16,6 +15,8 @@ const api = axios.create({
         'Content-Type': 'application/json',
     },
 });
+
+// Controls whether to use mock data or real API
 
 // Request interceptor - add auth token
 api.interceptors.request.use(
@@ -155,7 +156,7 @@ export const walletApi = {
                     data: {
                         available_balance: wallet.available_balance,
                         locked_balance: wallet.locked_balance,
-                        total_balance: wallet.total_balance,
+                        total_balance: wallet.balance,
                     }
                 };
             }
@@ -210,7 +211,7 @@ export const walletApi = {
             }
 
             // Generate mock transaction ID
-            const txId = `TX_${Date.now().toString(16).toUpperCase()}_MOCK`;
+            const txId = `TX_${Date.now().toString(16).toUpperCase()}`;
 
             return {
                 success: true,
@@ -418,6 +419,18 @@ export const nodeApi = {
         const response = await api.get(`/nodes/applications/${applicationId}`);
         return response.data;
     },
+
+    /**
+     * Create node identity (enroll with ca-user and ca-node)
+     * POST /nodes/create-identity
+     *
+     * This should be called after node application is approved
+     * and NODE wallet is created
+     */
+    createNodeIdentity: async (data: { node_wallet_address: string; pin: string }) => {
+        const response = await api.post('/nodes/create-identity', data);
+        return response.data;
+    },
 };
 
 // ============================================
@@ -517,7 +530,7 @@ export const l2Api = {
      * Register a new L2 application
      * POST /l2/register
      */
-    register: async (data: L2RegisterRequest) => {
+    register: async (data: { pin: string; name: string; description: string; document_link?: string; fee: number }) => {
         const response = await api.post('/l2/register', data);
         return response.data;
     },

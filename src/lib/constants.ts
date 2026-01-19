@@ -4,7 +4,7 @@ export const WALLET_TYPE_LABELS: Record<string, string> = {
     REGULAR: 'Regular',
     NODE_WALLET: 'Node',
     NODE: 'Node', // Backward compatibility
-    DEVELOPER: 'Developer',
+    DEVELOPER_L2: 'Developer',
     OWNER: 'Owner',
 };
 

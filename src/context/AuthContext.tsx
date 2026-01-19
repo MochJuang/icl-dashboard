@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { User, WalletInfo, WalletType, LoginResponseData } from '../types/index';
+import { walletApi } from '../lib/api';
 
 interface AuthContextType {
     // User data
@@ -21,10 +22,11 @@ interface AuthContextType {
     setActiveWallet: (wallet: WalletInfo) => void;
 
     // Auth actions
-    login: (data: LoginResponseData) => void;
+    login: (data: LoginResponseData) => Promise<void>;
     logout: () => void;
     updateUser: (user: User) => void;
     updateWallets: (wallets: WalletInfo[]) => void;
+    refreshWallets: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
     }, []);
 
-    const login = useCallback((data: LoginResponseData) => {
+    const login = useCallback(async (data: LoginResponseData): Promise<void> => {
         const { token: newToken, user_id, email, wallets: userWallets, roles: userRoles, active_wallet_id } = data;
 
         const newUser: User = {
@@ -102,6 +104,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setWallets(userWallets);
         setRoles(userRoles);
         setActiveWalletState(activeWalletFromResponse);
+
+
     }, []);
 
     const logout = useCallback(() => {
@@ -155,8 +159,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [wallets]);
 
     const getNodeWallets = useCallback((): WalletInfo[] => {
+        console.log(wallets)
         return wallets.filter(w => w.wallet_type === 'NODE_WALLET');
     }, [wallets]);
+
+    // Refresh wallets from API
+    const refreshWallets = useCallback(async () => {
+        if (!token) {
+            console.warn('Cannot refresh wallets: No token available');
+            return;
+        }
+
+        try {
+            const response = await walletApi.getWallets();
+            if (response.success && response.data) {
+                const freshWallets = response.data;
+
+                // Update wallets in state and localStorage
+                localStorage.setItem('wallets', JSON.stringify(freshWallets));
+                var walletsNew = freshWallets.map((v: any) => {
+                    return {
+                        wallet_id: v.wallet_id,
+                        wallet_address: v.wallet_address,
+                        wallet_type: v.type,
+                        role: v.wallet_type,
+                        balance: v.balance,
+                        status: v.status,
+                    }
+                });
+                console.log('Refreshed wallets:', walletsNew);
+                setWallets(walletsNew);
+
+                // Update active wallet if it exists
+                if (activeWallet) {
+                    const updatedActiveWallet = freshWallets.find(
+                        (w: any) => w.wallet_id === activeWallet.wallet_id
+                    );
+                    if (updatedActiveWallet) {
+                        localStorage.setItem('activeWallet', JSON.stringify(updatedActiveWallet));
+                        setActiveWalletState(updatedActiveWallet);
+                    }
+                }
+
+                console.log('✅ Wallets refreshed successfully');
+            }
+        } catch (error) {
+            console.error('❌ Failed to refresh wallets:', error);
+            throw error;
+        }
+    }, [token, activeWallet]);
 
     const value = useMemo(() => ({
         user,
@@ -175,6 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         updateUser,
         updateWallets,
+        refreshWallets,
     }), [
         user,
         token,
@@ -191,6 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         updateUser,
         updateWallets,
+        refreshWallets,
     ]);
 
     return (

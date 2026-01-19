@@ -16,7 +16,7 @@ import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { userApi, walletApi } from '../lib/api';
 import { formatCurrency, formatDate, cn } from '../lib/utils';
-import type { TransferRecord, UserProfile, WalletInfo } from '../types';
+import type { TransferRecord, WalletInfo } from '../types';
 import { useAuth } from '../context/AuthContext';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 

@@ -20,7 +20,9 @@ export default function Login() {
         onSuccess: async (response) => {
             if (response.success && response.data) {
                 const data = response.data as LoginResponseData;
-                login(data);
+
+                // Wait for login to complete (fetches wallets from API)
+                await login(data);
 
                 // Fetch full profile to get full_name
                 try {

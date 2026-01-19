@@ -42,9 +42,12 @@ export default function Dashboard() {
     const wallets: WalletType[] = walletsData?.data || [];
     const nodes: Node[] = nodesData?.data || [];
     const votes: VoteType[] = votesData?.data || [];
+    refetchWallets()
+    
 
     const totalBalance = wallets.reduce((sum: number, w) => sum + (w.balance || 0), 0);
     const totalLocked = wallets.reduce((sum: number, w) => sum + (w.locked_balance || 0), 0);
+
 
     const stats = [
         {

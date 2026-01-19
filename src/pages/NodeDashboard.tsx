@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Server, Plus, Activity, Vote, Power, PowerOff, RefreshCw, Info } from 'lucide-react';
+import { Server, Plus, Activity, Vote, Power, PowerOff, RefreshCw, Info, Key, Shield } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { Modal } from '../components/ui/Modal';
+import { Input } from '../components/ui/Input';
 import { nodeApi, governanceApi } from '../lib/api';
 import { formatDate, formatCurrency, cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import type { NodeApplication, Vote as VoteType, Node } from '../types';
+import type { NodeApplication, Vote as VoteType, Node, WalletInfo } from '../types';
 
 const statusVariants: Record<string, 'default' | 'success' | 'warning' | 'danger'> = {
     PENDING: 'warning',
@@ -20,8 +23,16 @@ const statusVariants: Record<string, 'default' | 'success' | 'warning' | 'danger
 
 export default function NodeDashboard() {
     const queryClient = useQueryClient();
-    const { hasWalletType } = useAuth();
+    const { hasWalletType, wallets } = useAuth();
     const { showToast } = useToast();
+
+    // State for create identity modal
+    const [showIdentityModal, setShowIdentityModal] = useState(false);
+    const [selectedNodeWallet, setSelectedNodeWallet] = useState<WalletInfo | null>(null);
+    const [pin, setPin] = useState('');
+
+    // Get NODE wallets from user's wallets
+    const nodeWallets = wallets.filter(w => w.wallet_type === 'NODE_WALLET');
 
     // Fetch my nodes
     const { data: nodesData, isLoading: loadingNodes, refetch: refetchNodes } = useQuery({
@@ -84,6 +95,44 @@ export default function NodeDashboard() {
             showToast(err.message || 'Failed to deactivate node', 'error');
         },
     });
+
+    // Create node identity mutation
+    const createIdentityMutation = useMutation({
+        mutationFn: (data: { node_wallet_address: string; pin: string }) => nodeApi.createNodeIdentity(data),
+        onSuccess: (response) => {
+            if (response.success) {
+                showToast('Node identity created successfully! Your node is now activated.', 'success');
+                queryClient.invalidateQueries({ queryKey: ['my-nodes'] });
+                queryClient.invalidateQueries({ queryKey: ['wallets'] });
+                setShowIdentityModal(false);
+                setPin('');
+                setSelectedNodeWallet(null);
+            } else {
+                showToast(response.error || 'Failed to create node identity', 'error');
+            }
+        },
+        onError: (err: Error) => {
+            showToast(err.message || 'Failed to create node identity', 'error');
+        },
+    });
+
+    // Handler for opening identity modal
+    const handleOpenIdentityModal = (wallet: WalletInfo) => {
+        setSelectedNodeWallet(wallet);
+        setShowIdentityModal(true);
+    };
+
+    // Handler for submitting identity creation
+    const handleCreateIdentity = () => {
+        if (!selectedNodeWallet || !pin) {
+            showToast('Please enter your PIN', 'error');
+            return;
+        }
+        createIdentityMutation.mutate({
+            node_wallet_address: selectedNodeWallet.wallet_address,
+            pin: pin,
+        });
+    };
 
 
 
@@ -358,6 +407,126 @@ export default function NodeDashboard() {
                     </div>
                 </div>
             )}
+
+            {/* Node Wallets needing identity activation */}
+            {nodeWallets.length > 0 && (
+                <Card className="mt-6">
+                    <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <Key className="h-5 w-5 text-amber-600" />
+                            Node Identity Activation
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Your NODE wallet(s) need identity activation to participate in governance voting and node operations.
+                            This will enroll your wallet with the Fabric CA (both ca-user and ca-node).
+                        </p>
+                        <div className="space-y-3">
+                            {nodeWallets.map((wallet) => (
+                                <div
+                                    key={wallet.wallet_id}
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-amber-200 bg-amber-50 gap-4"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2.5 rounded-xl bg-amber-100 flex-shrink-0">
+                                            <Shield className="h-5 w-5 text-amber-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-gray-900">{wallet.wallet_address}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <Badge variant="warning">NODE_WALLET</Badge>
+                                                <span className="text-sm text-gray-500">
+                                                    Balance: {formatCurrency(wallet.balance)} ICL
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        onClick={() => handleOpenIdentityModal(wallet)}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Key className="h-4 w-4" />
+                                        <span>Activate Identity</span>
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Create Node Identity Modal */}
+            <Modal
+                isOpen={showIdentityModal}
+                onClose={() => {
+                    setShowIdentityModal(false);
+                    setPin('');
+                    setSelectedNodeWallet(null);
+                }}
+                title="Create Node Identity"
+            >
+                <div className="space-y-4">
+                    <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                        <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm text-blue-700">
+                            <p className="font-medium text-blue-800 mb-1">What happens next?</p>
+                            <ul className="list-disc pl-4 space-y-1">
+                                <li>Your identity will be enrolled with Fabric CA (ca-user)</li>
+                                <li>A node identity will be created with Fabric CA (ca-node)</li>
+                                <li>Your private key will be encrypted with your PIN</li>
+                                <li>You can start participating in governance voting</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    {selectedNodeWallet && (
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                            <p className="text-sm text-gray-600">Wallet Address:</p>
+                            <p className="font-mono text-sm font-medium">{selectedNodeWallet.wallet_address}</p>
+                        </div>
+                    )}
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Enter your PIN
+                        </label>
+                        <Input
+                            type="password"
+                            value={pin}
+                            onChange={(e) => setPin(e.target.value)}
+                            placeholder="Enter your PIN"
+                            maxLength={8}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                            This is the same PIN you used during registration.
+                        </p>
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setShowIdentityModal(false);
+                                setPin('');
+                                setSelectedNodeWallet(null);
+                            }}
+                            className="flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleCreateIdentity}
+                            isLoading={createIdentityMutation.isPending}
+                            disabled={!pin || pin.length < 4}
+                            className="flex-1"
+                        >
+                            <Key className="h-4 w-4 mr-2" />
+                            Create Identity
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }
