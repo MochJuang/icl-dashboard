@@ -8,7 +8,7 @@ export interface User {
 }
 
 // Wallet types
-export type WalletType = 'REGULAR' | 'NODE_WALLET' | 'DEVELOPER_L2' | 'OWNER';
+export type WalletType = 'REGULAR' | 'NODE_WALLET' | 'DEVELOPER_L2' | 'L2_DEVELOPER' | 'DEVELOPER' | 'OWNER';
 export type WalletStatus = 'ACTIVE' | 'SUSPENDED' | 'REVOKED';
 export type WalletRole = 'USER' | 'VALIDATOR' | 'OWNER' | 'DEVELOPER';
 
@@ -292,6 +292,8 @@ export const WALLET_TYPE_LABELS: Record<WalletType, string> = {
     NODE_WALLET: 'Node',
     OWNER: 'Owner',
     DEVELOPER: 'Developer',
+    L2_DEVELOPER: 'Developer',
+    DEVELOPER_L2: 'Developer',
 };
 
 // Helper to get wallet type from either 'type' or 'wallet_type' field

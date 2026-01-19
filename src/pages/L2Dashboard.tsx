@@ -21,6 +21,7 @@ interface L2Application {
     created_at: string;
     updated_at?: string;
     approved_at?: string;
+    fee: number;
     fee_distribution: {
         min_fee: number;
         validator_share: number;
@@ -167,7 +168,7 @@ export default function L2Dashboard() {
 
                                 <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
                                     <span className="text-xs text-gray-500">
-                                        Created: {formatDate(l2.approved_at)}
+                                        Created: {l2.approved_at ? formatDate(l2.approved_at) : '-'}
                                     </span>
                                     <Button
                                         variant="primary"
