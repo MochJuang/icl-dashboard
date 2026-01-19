@@ -59,7 +59,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     // Developer navigation - only if has DEVELOPER wallet
     const developerNav: NavItem[] = useMemo(() => {
-        if (!hasWalletType('DEVELOPER')) return [];
+        if (!hasWalletType('L2_DEVELOPER')) return [];
         return [
             { name: 'My L2s', href: '/l2', icon: Layers },
         ];

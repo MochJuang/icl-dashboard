@@ -8,7 +8,7 @@ export interface User {
 }
 
 // Wallet types
-export type WalletType = 'REGULAR' | 'NODE_WALLET' | 'DEVELOPER' | 'OWNER';
+export type WalletType = 'REGULAR' | 'NODE_WALLET' | 'DEVELOPER_L2' | 'OWNER';
 export type WalletStatus = 'ACTIVE' | 'SUSPENDED' | 'REVOKED';
 export type WalletRole = 'USER' | 'VALIDATOR' | 'OWNER' | 'DEVELOPER';
 

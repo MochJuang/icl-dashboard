@@ -125,7 +125,7 @@ export default function Voting() {
 
                 // Refresh wallets to get updated balances
                 try {
-                    await refreshWallets();
+                    // await refreshWallets();
                 } catch (error) {
                     console.error('Failed to refresh wallets after vote:', error);
                 }

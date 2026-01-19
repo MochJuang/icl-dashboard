@@ -140,7 +140,7 @@ export default function L2Dashboard() {
                                     </div>
                                     <div>
                                         <p className="text-gray-500">Gas Fee</p>
-                                        <p className="font-medium">{formatCurrency(l2.gas_fee)} ICL</p>
+                                        <p className="font-medium">{formatCurrency(l2.fee)} ICL</p>
                                     </div>
                                 </div>
 
@@ -167,7 +167,7 @@ export default function L2Dashboard() {
 
                                 <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
                                     <span className="text-xs text-gray-500">
-                                        Created: {formatDate(l2.created_at)}
+                                        Created: {formatDate(l2.approved_at)}
                                     </span>
                                     <Button
                                         variant="primary"
