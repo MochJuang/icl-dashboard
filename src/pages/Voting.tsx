@@ -33,8 +33,12 @@ interface VoteDetail {
     fullnode_reject: number;
     total_validators: number;
     total_fullnodes: number;
-    voting_end: string;
-    created_at: string;
+    // Support both API and mock data field names
+    validator_total?: number;
+    fullnode_total?: number;
+    voting_end?: string;
+    expires_at: string;
+    submitted_at: string;
     my_vote?: string;
 }
 
@@ -219,9 +223,9 @@ export default function Voting() {
             ) : (
                 <div className="space-y-4">
                     {votes.map((vote) => {
-                        const validatorProgress = calculateVoteProgress(vote.validator_approve, vote.validator_reject);
-                        const fullnodeProgress = calculateVoteProgress(vote.fullnode_approve, vote.fullnode_reject);
-                        const timeRemaining = getTimeRemaining(vote.voting_end);
+                        const validatorProgress = calculateVoteProgress(vote.validator_approve, vote.validator_total || vote.total_validators || 0);
+                        const fullnodeProgress = calculateVoteProgress(vote.fullnode_approve, vote.fullnode_total || vote.total_fullnodes || 0);
+                        const timeRemaining = getTimeRemaining(vote.submitted_at);
                         const isExpired = timeRemaining.expired;
                         const alreadyVoted = hasVoted(vote);
 

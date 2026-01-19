@@ -80,6 +80,10 @@ export const userApi = {
      * GET /users/profile
      */
     getProfile: async () => {
+        if (USE_MOCK_DATA) {
+            const { mockDeveloperProfile } = await import('./mockData');
+            return { data: mockDeveloperProfile };
+        }
         const response = await api.get('/users/profile');
         return response.data;
     },
@@ -89,6 +93,10 @@ export const userApi = {
      * GET /users/wallets
      */
     getWallets: async () => {
+        if (USE_MOCK_DATA) {
+            const { mockWallets } = await import('./mockData');
+            return { data: mockWallets };
+        }
         const response = await api.get('/users/wallets');
         return response.data;
     },
@@ -103,6 +111,10 @@ export const walletApi = {
      * GET /wallets
      */
     getWallets: async () => {
+        if (USE_MOCK_DATA) {
+            const { mockWallets } = await import('./mockData');
+            return { data: mockWallets };
+        }
         const response = await api.get('/wallets');
         return response.data;
     },
@@ -121,6 +133,11 @@ export const walletApi = {
      * GET /wallets/address/:address
      */
     getWalletByAddress: async (walletAddress: string) => {
+        if (USE_MOCK_DATA) {
+            const { mockWallets } = await import('./mockData');
+            const wallet = mockWallets.find(w => w.wallet_address === walletAddress);
+            return { data: wallet || null };
+        }
         const response = await api.get(`/wallets/address/${walletAddress}`);
         return response.data;
     },
@@ -130,6 +147,20 @@ export const walletApi = {
      * GET /wallets/address/:address/balance
      */
     getBalance: async (walletAddress: string) => {
+        if (USE_MOCK_DATA) {
+            const { mockWallets } = await import('./mockData');
+            const wallet = mockWallets.find(w => w.wallet_address === walletAddress);
+            if (wallet) {
+                return {
+                    data: {
+                        available_balance: wallet.available_balance,
+                        locked_balance: wallet.locked_balance,
+                        total_balance: wallet.total_balance,
+                    }
+                };
+            }
+            return { data: null };
+        }
         const response = await api.get(`/wallets/address/${walletAddress}/balance`);
         return response.data;
     },
@@ -149,6 +180,50 @@ export const walletApi = {
      * }
      */
     transfer: async (data: TransferRequest) => {
+        if (USE_MOCK_DATA) {
+            // Simulate transfer with mock data
+            const { mockWallets } = await import('./mockData');
+            const sourceWallet = mockWallets.find(w => w.wallet_address === data.wallet_address);
+
+            // Validate PIN (mock PIN is "123456")
+            if (data.pin !== "123456") {
+                return {
+                    success: false,
+                    error: "Invalid PIN"
+                };
+            }
+
+            // Check if source wallet exists and has enough balance
+            if (!sourceWallet) {
+                return {
+                    success: false,
+                    error: "Source wallet not found"
+                };
+            }
+
+            const balance = sourceWallet.available_balance || sourceWallet.balance || 0;
+            if (balance < data.transfer.amount) {
+                return {
+                    success: false,
+                    error: `Insufficient balance. Available: ${balance} ICL`
+                };
+            }
+
+            // Generate mock transaction ID
+            const txId = `TX_${Date.now().toString(16).toUpperCase()}_MOCK`;
+
+            return {
+                success: true,
+                data: {
+                    tx_id: txId,
+                    from_wallet: data.wallet_address,
+                    to_wallet: data.transfer.to_wallet_address,
+                    amount: data.transfer.amount,
+                    fee_charged: 0,
+                    timestamp: new Date().toISOString(),
+                }
+            };
+        }
         const response = await api.post('/wallets/transfer', data);
         return response.data;
     },
@@ -183,6 +258,27 @@ export const walletApi = {
      * GET /wallets/transfers
      */
     getTransferHistory: async () => {
+        if (USE_MOCK_DATA) {
+            const { mockTransactionHistory } = await import('./mockData');
+            // Transform to match TransferRecord type
+            const transfers = mockTransactionHistory.map(tx => ({
+                tx_id: tx.tx_id,
+                type: tx.type,
+                from_wallet_id: tx.from_wallet,
+                to_wallet_id: tx.to_wallet,
+                amount: tx.amount,
+                fee: tx.fee,
+                status: tx.status,
+                description: tx.description,
+                timestamp: tx.created_at,
+            }));
+            return {
+                data: {
+                    transfers,
+                    total_count: transfers.length
+                }
+            };
+        }
         const response = await api.get('/wallets/transfers');
         return response.data;
     },
@@ -192,6 +288,33 @@ export const walletApi = {
      * GET /wallets/:wallet_id/history
      */
     getWalletHistory: async (walletId: string) => {
+        if (USE_MOCK_DATA) {
+            const { mockTransactionHistory, mockWallets } = await import('./mockData');
+            // Find wallet address from wallet_id
+            const wallet = mockWallets.find(w => w.wallet_id === walletId);
+            const walletAddress = wallet?.wallet_address || walletId;
+
+            // Filter transactions for this wallet
+            const transfers = mockTransactionHistory
+                .filter(tx => tx.from_wallet === walletAddress || tx.to_wallet === walletAddress)
+                .map(tx => ({
+                    tx_id: tx.tx_id,
+                    type: tx.type,
+                    from_wallet_id: tx.from_wallet,
+                    to_wallet_id: tx.to_wallet,
+                    amount: tx.amount,
+                    fee: tx.fee,
+                    status: tx.status,
+                    description: tx.description,
+                    timestamp: tx.created_at,
+                }));
+            return {
+                data: {
+                    transfers,
+                    total_count: transfers.length
+                }
+            };
+        }
         const response = await api.get(`/wallets/${walletId}/history`);
         return response.data;
     },
@@ -226,6 +349,10 @@ export const nodeApi = {
      * GET /nodes/my-applications
      */
     getMyApplications: async () => {
+        if (USE_MOCK_DATA) {
+            const { mockNodeApplications } = await import('./mockData');
+            return { data: mockNodeApplications };
+        }
         const response = await api.get('/nodes/my-applications');
         return response.data;
     },
@@ -235,6 +362,10 @@ export const nodeApi = {
      * GET /nodes/my-nodes
      */
     getMyNodes: async () => {
+        if (USE_MOCK_DATA) {
+            const { mockMyNodes } = await import('./mockData');
+            return { data: mockMyNodes };
+        }
         const response = await api.get('/nodes/my-nodes');
         return response.data;
     },
@@ -244,6 +375,10 @@ export const nodeApi = {
      * GET /nodes/active
      */
     getActiveNodes: async () => {
+        if (USE_MOCK_DATA) {
+            const { mockActiveNodes } = await import('./mockData');
+            return { data: mockActiveNodes };
+        }
         const response = await api.get('/nodes/active');
         return response.data;
     },
@@ -288,12 +423,17 @@ export const nodeApi = {
 // ============================================
 // Governance API
 // ============================================
+import { USE_MOCK_DATA, mockPendingVotes } from './mockData';
+
 export const governanceApi = {
     /**
      * Get all active votes
      * GET /governance/votes/active
      */
     getActiveVotes: async () => {
+        if (USE_MOCK_DATA) {
+            return { data: mockPendingVotes };
+        }
         const response = await api.get('/governance/votes/active');
         return response.data;
     },
@@ -303,6 +443,12 @@ export const governanceApi = {
      * GET /governance/votes/:voteId
      */
     getVote: async (voteId: string) => {
+        if (USE_MOCK_DATA) {
+            const vote = mockPendingVotes.find(v => v.vote_id === voteId);
+            if (vote) {
+                return { data: vote };
+            }
+        }
         const response = await api.get(`/governance/votes/${voteId}`);
         return response.data;
     },
@@ -332,6 +478,9 @@ export const governanceApi = {
      * GET /governance/node-applications/pending
      */
     getPendingNodeApplications: async () => {
+        if (USE_MOCK_DATA) {
+            return { data: [] }; // No pending node applications for now
+        }
         const response = await api.get('/governance/node-applications/pending');
         return response.data;
     },
@@ -341,6 +490,9 @@ export const governanceApi = {
      * GET /governance/developer-applications/pending
      */
     getPendingDeveloperApplications: async () => {
+        if (USE_MOCK_DATA) {
+            return { data: [] }; // No pending developer applications for now
+        }
         const response = await api.get('/governance/developer-applications/pending');
         return response.data;
     },
@@ -358,6 +510,8 @@ export const governanceApi = {
 // ============================================
 // L2 API
 // ============================================
+import { mockL2Applications } from './mockData';
+
 export const l2Api = {
     /**
      * Register a new L2 application
@@ -373,6 +527,10 @@ export const l2Api = {
      * GET /l2/my-l2s
      */
     getMyL2s: async () => {
+        if (USE_MOCK_DATA) {
+            // Return all L2 apps (PENDING and ACTIVE)
+            return { data: mockL2Applications };
+        }
         const response = await api.get('/l2/my-l2s');
         return response.data;
     },
@@ -382,6 +540,12 @@ export const l2Api = {
      * GET /l2/:l2Id
      */
     getL2: async (l2Id: string) => {
+        if (USE_MOCK_DATA) {
+            const l2 = mockL2Applications.find(l => l.l2_id === l2Id);
+            if (l2) {
+                return { data: l2 };
+            }
+        }
         const response = await api.get(`/l2/${l2Id}`);
         return response.data;
     },

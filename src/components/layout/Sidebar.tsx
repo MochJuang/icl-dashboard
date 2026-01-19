@@ -15,6 +15,7 @@ import {
     History,
     FileText,
     Code,
+    Database,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
@@ -39,6 +40,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const baseNav: NavItem[] = [
         { name: 'Dashboard', href: '/', icon: LayoutDashboard },
         { name: 'Wallets', href: '/wallets', icon: Wallet },
+        { name: 'My Data', href: '/my-data', icon: Database },
         { name: 'Transactions', href: '/transactions', icon: History },
     ];
 
@@ -201,7 +203,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                         </span>
                                     </div>
                                     <span className="text-[10px] px-2 py-1 rounded bg-white/10 text-white/80 font-medium backdrop-blur-sm border border-white/10">
-                                        {activeWallet.wallet_type}
                                     </span>
                                 </div>
                             </div>

@@ -22,6 +22,7 @@ import Voting from './pages/Voting';
 import OwnerMint from './pages/OwnerMint';
 import Treasury from './pages/Treasury';
 import ActiveNodes from './pages/ActiveNodes';
+import MyData from './pages/MyData';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -54,6 +55,7 @@ function App() {
               >
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/wallets" element={<Wallets />} />
+                <Route path="/my-data" element={<MyData />} />
                 <Route path="/transactions" element={<TransactionHistory />} />
                 <Route path="/l2" element={<L2Dashboard />} />
                 <Route path="/l2/register" element={<L2Register />} />

@@ -72,8 +72,7 @@ export function shortenId(id: string, prefixChars = 8, suffixChars = 4): string 
     return `${id.slice(0, prefixChars)}...${id.slice(-suffixChars)}`;
 }
 
-export function calculateVoteProgress(approve: number, reject: number): number {
-    const total = approve + reject;
+export function calculateVoteProgress(approve: number, total: number): number {
     if (total === 0) return 0;
     return Math.round((approve / total) * 100);
 }
@@ -87,7 +86,7 @@ export function isVotingExpired(votingEnd: string): boolean {
 
 export function getTimeRemaining(endDate: string): { days: number; hours: number; minutes: number; expired: boolean } {
     if (!endDate || endDate === '0001-01-01T00:00:00Z') {
-        return { days: 0, hours: 0, minutes: 0, expired: true };
+        return { days: 0, hours: 0, minutes: 0, expired: false };
     }
 
     const end = new Date(endDate);

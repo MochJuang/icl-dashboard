@@ -113,7 +113,7 @@ export default function DeveloperApplications() {
         );
     };
 
-    const L2Card = ({ l2 }: { l2: L2 }) => (
+    const L2Card = ({ l2, onViewDetails }: { l2: any; onViewDetails?: () => void }) => (
         <Card className="hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
                 <div className="flex items-start justify-between gap-4 mb-4">
@@ -122,8 +122,8 @@ export default function DeveloperApplications() {
                             <Layers className="h-5 w-5" />
                         </div>
                         <div>
-                            <p className="font-semibold text-gray-900">{l2.l2_id}</p>
-                            <p className="text-sm text-gray-500">{l2.chaincode_name}</p>
+                            <p className="font-semibold text-gray-900">{l2.name || l2.l2_id}</p>
+                            <p className="text-sm text-gray-500 font-mono">{l2.l2_id}</p>
                         </div>
                     </div>
                     <Badge variant={statusVariants[l2.status] || 'default'}>
@@ -131,19 +131,31 @@ export default function DeveloperApplications() {
                     </Badge>
                 </div>
 
+                {l2.description && (
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">{l2.description}</p>
+                )}
+
                 <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                        <span className="text-gray-500">Base Fee</span>
-                        <span className="font-medium text-gray-900">{l2.base_fee} ICL</span>
+                        <span className="text-gray-500">Gas Fee</span>
+                        <span className="font-medium text-gray-900">{l2.gas_fee || l2.base_fee} ICL</span>
                     </div>
-                    {l2.profit_sharing && (
+                    {l2.fee_distribution && (
                         <div className="flex flex-col gap-1">
-                            <span className="text-gray-500">Profit Sharing</span>
-                            <div className="grid grid-cols-2 gap-1 text-xs">
-                                <span className="text-gray-600">Developer: {l2.profit_sharing.developer_share}%</span>
-                                <span className="text-gray-600">Validator: {l2.profit_sharing.validator_share}%</span>
-                                <span className="text-gray-600">Full Node: {l2.profit_sharing.fullnode_share}%</span>
-                                <span className="text-gray-600">Protocol: {l2.profit_sharing.protocol_share}%</span>
+                            <span className="text-gray-500">Fee Distribution</span>
+                            <div className="flex flex-wrap gap-1 text-xs">
+                                <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                                    Val: {l2.fee_distribution.validator_share} ICL
+                                </span>
+                                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                                    Full: {l2.fee_distribution.fullnode_share} ICL
+                                </span>
+                                <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded">
+                                    Proto: {l2.fee_distribution.protocol_share} ICL
+                                </span>
+                                <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                                    Dev: {l2.fee_distribution.developer_margin} ICL
+                                </span>
                             </div>
                         </div>
                     )}
@@ -151,6 +163,19 @@ export default function DeveloperApplications() {
                         <span className="text-gray-500">Created</span>
                         <span className="text-gray-700">{formatDate(l2.created_at)}</span>
                     </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                    <a
+                        href="/l2"
+                        className="flex items-center justify-between p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
+                    >
+                        <div className="flex items-center gap-2 text-blue-700">
+                            <Layers className="h-4 w-4" />
+                            <span className="text-sm font-medium">View Details</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-blue-600" />
+                    </a>
                 </div>
             </CardContent>
         </Card>
