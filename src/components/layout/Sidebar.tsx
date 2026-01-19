@@ -69,7 +69,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     const nodeNav: NavItem[] = useMemo(() => {
         const items: NavItem[] = [];
         const hasNodeWallet = hasWalletType('NODE_WALLET');
-        
+
         // Debug log
         console.log('Sidebar: hasNodeWallet =', hasNodeWallet);
 

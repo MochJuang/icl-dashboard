@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Layers, Plus, Eye, Key, FileText, Clock, Copy, CheckCircle, ExternalLink } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
@@ -37,8 +37,16 @@ interface L2Application {
 }
 
 // Mock transaction records for demo
-const mockTransactionRecords = [
-    { tx_id: "dbb8460765696de373538aa2458f949bda8d5209c46161246c69f1ff251df89c", type: "SAVE_FILE", timestamp: "2026-01-15T15:00:00Z", fee: 2.0, status: "SUCCESS" },
+interface MockTransaction {
+    tx_id: string;
+    type: string;
+    timestamp: string;
+    fee: number;
+    status: string;
+}
+
+const mockTransactionRecords: MockTransaction[] = [
+    // { tx_id: "dbb8460765696de373538aa2458f949bda8d5209c46161246c69f1ff251df89c", type: "SAVE_FILE", timestamp: "2026-01-15T15:00:00Z", fee: 2.0, status: "SUCCESS" },
     // { tx_id: "TX_002", type: "SAVE_FILE", timestamp: "2026-01-15T16:30:00Z", fee: 2.0, status: "SUCCESS" },
     // { tx_id: "TX_003", type: "GRANT_ACCESS", timestamp: "2026-01-15T17:00:00Z", fee: 0.5, status: "SUCCESS" },
     // { tx_id: "TX_004", type: "SAVE_FILE", timestamp: "2026-01-16T08:00:00Z", fee: 2.0, status: "SUCCESS" },
@@ -52,6 +60,7 @@ const statusVariants: Record<string, 'default' | 'success' | 'warning' | 'danger
 };
 
 export default function L2Dashboard() {
+    const navigate = useNavigate();
     const [selectedL2, setSelectedL2] = useState<L2Application | null>(null);
     const [copiedField, setCopiedField] = useState<string | null>(null);
 
@@ -163,7 +172,7 @@ export default function L2Dashboard() {
                                     <Button
                                         variant="primary"
                                         size="sm"
-                                        onClick={() => setSelectedL2(l2)}
+                                        onClick={() => navigate(`/l2/${l2.l2_id}`)}
                                     >
                                         <Eye className="h-4 w-4 mr-1" />
                                         View Details

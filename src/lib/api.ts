@@ -580,6 +580,49 @@ export const l2Api = {
         const response = await api.post('/l2/reject', { l2_id: l2Id, reason });
         return response.data;
     },
+
+    /**
+     * Get L2 transactions
+     * GET /l2/:l2Id/transactions
+     */
+    getTransactions: async (l2Id: string, page: number = 1, limit: number = 10) => {
+        if (USE_MOCK_DATA) {
+            // Return empty transactions for mock
+            return {
+                data: {
+                    transactions: [],
+                    total_count: 0,
+                    page,
+                    limit
+                }
+            };
+        }
+        const response = await api.get(`/l2/${l2Id}/transactions`, {
+            params: { page, limit }
+        });
+        return response.data;
+    },
+
+    /**
+     * Get L2 statistics
+     * GET /l2/:l2Id/stats
+     */
+    getStats: async (l2Id: string) => {
+        if (USE_MOCK_DATA) {
+            // Return mock stats
+            return {
+                data: {
+                    total_transactions: 0,
+                    total_fees_collected: 0,
+                    total_files: 0,
+                    total_data_records: 0,
+                    developer_earnings: 0
+                }
+            };
+        }
+        const response = await api.get(`/l2/${l2Id}/stats`);
+        return response.data;
+    },
 };
 
 // ============================================
@@ -642,3 +685,138 @@ export const healthApi = {
         return response.data;
     },
 };
+
+// ============================================
+// File API
+// ============================================
+export interface SaveFileRequest {
+    file_url: string;
+    file_name: string;
+    is_private: boolean;
+    wallet_address: string;
+    pin: string;
+    metadata?: Record<string, unknown>;
+    l2_id?: string;
+}
+
+export interface ShareFileAccessRequest {
+    tx_id: string;
+    owner_wallet_address: string;
+    recipient_email: string;
+    permission: 'read' | 'write' | 'read-write';
+    pin: string;
+}
+
+export interface DownloadPrivateFileRequest {
+    tx_id: string;
+    wallet_address: string;
+    pin: string;
+}
+
+export interface FileInfo {
+    tx_id: string;
+    l2_id?: string;
+    ipfs_cid: string;
+    file_name: string;
+    file_size?: number;
+    is_private: boolean;
+    encrypted_key?: string;
+    owner_wallet: string;
+    metadata?: Record<string, unknown>;
+    created_at: string;
+    shared_with?: Array<{
+        wallet_address: string;
+        permission: string;
+        granted_at: string;
+        encrypted_key: string;
+    }>;
+    has_access: boolean;
+    access_type?: 'owner' | 'shared';
+}
+
+export interface SaveFileResponse {
+    success: boolean;
+    message: string;
+    tx_id: string;
+    fee_charged: number;
+    system_gas_fee: number;
+    owner_fee: number;
+    l2_base_fee: number;
+    timestamp: string;
+    ipfs_cid: string;
+    encrypted_key?: string;
+    is_private: boolean;
+    file_name: string;
+}
+
+export const fileApi = {
+    /**
+     * Save file (upload to IPFS and record on blockchain)
+     * POST /transactions/save-file
+     *
+     * For private files:
+     * - File is encrypted with AES-256-GCM
+     * - AES key is encrypted with wallet's public key
+     * - Returns encrypted_key for future access
+     */
+    saveFile: async (data: SaveFileRequest): Promise<{ success: boolean; data?: SaveFileResponse; error?: string }> => {
+        const response = await api.post('/transactions/save-file', data);
+        return response.data;
+    },
+
+    /**
+     * Get file info from ledger
+     * GET /files/:tx_id
+     */
+    getFileInfo: async (txId: string): Promise<{ success: boolean; data?: FileInfo; error?: string }> => {
+        const response = await api.get(`/files/${txId}`);
+        return response.data;
+    },
+
+    /**
+     * Download private file (decrypt and return)
+     * POST /files/download
+     *
+     * Returns the decrypted file as blob
+     */
+    downloadPrivateFile: async (data: DownloadPrivateFileRequest): Promise<Blob> => {
+        const response = await api.post('/files/download', data, {
+            responseType: 'blob',
+        });
+        return response.data;
+    },
+
+    /**
+     * Share file access with another user by email
+     * POST /files/share
+     *
+     * Flow:
+     * 1. Decrypt AES key with owner's private key
+     * 2. Get recipient's regular wallet by email
+     * 3. Re-encrypt AES key with recipient's public key
+     * 4. Store new encrypted key on ledger
+     */
+    shareFileAccess: async (data: ShareFileAccessRequest): Promise<{ success: boolean; message?: string; error?: string }> => {
+        const response = await api.post('/files/share', data);
+        return response.data;
+    },
+
+    /**
+     * Get list of files owned by user
+     * GET /files/my-files
+     */
+    getMyFiles: async (): Promise<{ success: boolean; data?: FileInfo[]; error?: string }> => {
+        const response = await api.get('/files/my-files');
+        return response.data;
+    },
+
+    /**
+     * Get list of files shared with user
+     * GET /files/shared-with-me
+     */
+    getSharedWithMe: async (): Promise<{ success: boolean; data?: FileInfo[]; error?: string }> => {
+        const response = await api.get('/files/shared-with-me');
+        return response.data;
+    },
+};
+

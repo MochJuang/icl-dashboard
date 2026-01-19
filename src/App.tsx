@@ -12,6 +12,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Wallets from './pages/Wallets';
 import L2Dashboard from './pages/L2Dashboard';
+import L2Detail from './pages/L2Detail';
 import L2Register from './pages/L2Register';
 import NodeDashboard from './pages/NodeDashboard';
 import NodeApply from './pages/NodeApply';
@@ -58,6 +59,7 @@ function App() {
                 <Route path="/my-data" element={<MyData />} />
                 <Route path="/transactions" element={<TransactionHistory />} />
                 <Route path="/l2" element={<L2Dashboard />} />
+                <Route path="/l2/:l2Id" element={<L2Detail />} />
                 <Route path="/l2/register" element={<L2Register />} />
                 <Route path="/nodes" element={<NodeDashboard />} />
                 <Route path="/nodes/active" element={<ActiveNodes />} />
