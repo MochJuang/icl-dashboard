@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://3eb1b21c59df.ngrok-free.app/api/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://df597a07d718.ngrok-free.app/api/v1';
 
 export const WALLET_TYPE_LABELS: Record<string, string> = {
     REGULAR: 'Regular',
